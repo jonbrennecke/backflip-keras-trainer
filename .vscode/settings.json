@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/Users/jon/.local/share/virtualenvs/lesson-02-vtwERZ0p/bin/python"
+    "python.pythonPath": "/Users/jon/.local/share/virtualenvs/backflip-keras-trainer-2YezLyFc/bin/python",
+    "python.linting.enabled": true
 }

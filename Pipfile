@@ -10,6 +10,8 @@ pylint = "*"
 [packages]
 pytest = "*"
 keras = "*"
+tensorflow = "*"
+# tensorflow-gpu = "2.0.0-beta1"
 
 [requires]
 python_version = "3.7"

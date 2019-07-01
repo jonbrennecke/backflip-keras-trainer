@@ -7,9 +7,9 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array, array_t
 def load_image_array(
     image_path: str, target_size: tuple = None, color_mode: str = "rgb"
 ) -> np.ndarray:
-    load_img = tf.keras.preprocessing.image.load_img
-    img_to_array = tf.keras.preprocessing.image.img_to_array
-    image_array = img_to_array(load_img(image_path, target_size=target_size))
+    image_array = img_to_array(
+        load_img(image_path, target_size=target_size, color_mode=color_mode)
+    )
     return np.expand_dims(image_array, axis=0)
 
 

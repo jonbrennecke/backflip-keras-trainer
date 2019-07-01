@@ -10,7 +10,7 @@ IMAGE_DIMENSIONS = dict(
     ),
     model=dict(
         color_image=(3088, 2320, 3),
-        depth_image=(3088, 2320, 3),
-        segmentation_image=(1544, 1160, 3),
+        depth_image=(3088, 2320, 1),
+        segmentation_image=(1544, 1160, 1),
     ),
 )

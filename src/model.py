@@ -22,15 +22,18 @@ class Model(object):
             shape=image_dimensions["depth_image"], name="depth_image_input"
         )
 
-        color_layer = tf.keras.layers.Convolution2D(3, 3, 3)(self.color_image_input)
+        color_layer = tf.keras.layers.Conv2D(3, 3, 3)(self.color_image_input)
 
-        depth_layer = tf.keras.layers.Convolution2D(3, 3, 3)(self.depth_image_input)
+        depth_layer = tf.keras.layers.Conv2D(1, 3, 3)(self.depth_image_input)
+
+        # model.add(Activation('relu'))
+        # model.add(MaxPooling2D(pool_size=(2, 2)))
 
         merge_layer = tf.keras.layers.Add()([color_layer, depth_layer])
 
         # define output
         self.segmentation_image_output = tf.keras.layers.Dense(
-            units=3,
+            units=1,
             input_shape=image_dimensions["segmentation_image"],
             name="segmentation_image_output",
         )(merge_layer)

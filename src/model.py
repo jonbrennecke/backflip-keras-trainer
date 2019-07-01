@@ -41,7 +41,7 @@ class Model(object):
 
     def compile(self):
         self.model.compile(
-            optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+            optimizer="sgd", loss="binary_crossentropy", metrics=["accuracy"]
         )
 
     def train(self, color_image_array, depth_image_array, segmentation_image_array):
@@ -52,9 +52,16 @@ class Model(object):
         outputs = {"segmentation_image_output": segmentation_image_array}
         self.model.fit(x=inputs, y=outputs)
 
-    def evaluate(self):
-        # score = model.evaluate(x_test, y_test, batch_size=16)
-        pass
+    # def evaluate(self):
+    #     score = model.evaluate(x_test, y_test, batch_size=16)
+    #     pass
+
+    def predict(self, color_image_array, depth_image_array):
+        inputs = {
+            "color_image_input": color_image_array,
+            "depth_image_input": depth_image_array,
+        }
+        return self.model.predict(inputs)
 
     def summary(self):
         return self.model.summary()

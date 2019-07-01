@@ -19,7 +19,7 @@ def list_filenames(dataset_path: str) -> list:
     return filenames
 
 
-def list_dataset_image_filenames(dataset_path: str) -> list:
+def list_dataset_training_image_filenames(dataset_path: str) -> list:
     filenames = list_filenames(dataset_path)
     depth_filename = None
     segmentation_filename = None
@@ -44,9 +44,24 @@ def list_dataset_image_filenames(dataset_path: str) -> list:
     }
 
 
-def gen_training_files(dir_path):
+def list_dataset_debug_image_filenames(dataset_path: str) -> list:
+    dataset_images_path = os.path.join(dataset_path)
+    filenames = list_filenames(dataset_images_path)
+
+
+def gen_training_files(root_dir_path, images_dir_name: str = "training_images"):
+    dir_path = os.path.join(root_dir_path, images_dir_name)
     subdirs = list_subdirectory_names(dir_path)
     for subdir in subdirs:
         subdir_path = os.path.join(dir_path, subdir)
-        images = list_dataset_image_filenames(subdir_path)
-        yield {"dirname": subdir, "images": images}
+        images = list_dataset_training_image_filenames(subdir_path)
+        yield {"path": subdir_path, "images": images}
+
+
+def gen_debug_files(root_dir_path, images_dir_name: str = "debug_images"):
+    dir_path = os.path.join(root_dir_path, images_dir_name)
+    subdirs = list_subdirectory_names(dir_path)
+    for subdir in subdirs:
+        subdir_path = os.path.join(dir_path, subdir)
+        images = list_dataset_training_image_filenames(subdir_path)
+        yield {"path": subdir_path, "images": images}

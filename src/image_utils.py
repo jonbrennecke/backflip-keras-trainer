@@ -3,6 +3,7 @@ import numpy as np
 
 from tensorflow.keras.preprocessing.image import load_img, img_to_array, array_to_img
 
+
 def load_image_array(
     image_path: str, target_size: tuple = None, color_mode: str = "rgb"
 ) -> np.ndarray:

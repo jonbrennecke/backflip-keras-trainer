@@ -12,6 +12,8 @@ pytest = "*"
 pillow = "*"
 keras = "*"
 tensorflow = "*"
+# h5py = "*"
+# coremltools = "*"
 # tensorflow-gpu = "2.0.0-beta1"
 
 [requires]

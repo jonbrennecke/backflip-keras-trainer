@@ -22,14 +22,22 @@ class Model(object):
             shape=image_dimensions["depth_image"], name="depth_image_input"
         )
 
-        color_layer = tf.keras.layers.Conv2D(3, 3, 3)(self.color_image_input)
+        color_layer = self.color_image_input
+        color_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(color_layer)
+        color_layer = tf.keras.layers.Activation("relu")(color_layer)
 
-        depth_layer = tf.keras.layers.Conv2D(1, 3, 3)(self.depth_image_input)
-
-        # model.add(Activation('relu'))
-        # model.add(MaxPooling2D(pool_size=(2, 2)))
+        # depth_layer = self.depth_image_input
+        depth_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(
+            self.depth_image_input
+        )
 
         merge_layer = tf.keras.layers.Add()([color_layer, depth_layer])
+        merge_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
+        # merge_layer = tf.keras.layers.Activation("relu")(merge_layer)
+        merge_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
+        # merge_layer = tf.keras.layers.Activation("relu")(merge_layer)
+        merge_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
+        # merge_layer = tf.keras.layers.Activation("relu")(merge_layer)
 
         # define output
         self.segmentation_image_output = tf.keras.layers.Dense(
@@ -64,7 +72,7 @@ class Model(object):
             "color_image_input": color_image_array,
             "depth_image_input": depth_image_array,
         }
-        return self.model.predict(inputs)
+        return self.model.predict(inputs, batch_size=16)
 
     def summary(self):
         return self.model.summary()

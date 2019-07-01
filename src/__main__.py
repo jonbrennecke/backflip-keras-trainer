@@ -24,9 +24,7 @@ def run_training(model: Model):
         # resize both color and depth images to expected size
         color_image_width, color_image_height = image_dimensions["color_image"][0:2]
         color_image_array = load_image_array(
-            color_image_path,
-            target_size=(color_image_height, color_image_width),
-            # color_mode="grayscale"
+            color_image_path, target_size=(color_image_height, color_image_width)
         )
 
         depth_image_array = load_image_array(
@@ -57,9 +55,7 @@ def run_debug_prediction(model: Model):
 
         color_image_width, color_image_height = image_dimensions["color_image"][0:2]
         color_image_array = load_image_array(
-            color_image_path,
-            target_size=(color_image_height, color_image_width),
-            # color_mode="grayscale",
+            color_image_path, target_size=(color_image_height, color_image_width)
         )
 
         depth_image_array = load_image_array(

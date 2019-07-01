@@ -1,3 +1,6 @@
+import os
+
+
 def list_subdirectory_names(dir_path: str) -> list:
     if not os.path.isdir(dir_path):
         raise Exception(f"Provided data directory is not a directory: {dir_path}")

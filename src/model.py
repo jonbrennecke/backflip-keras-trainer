@@ -1,9 +1,8 @@
 import tensorflow as tf
 
-# TODO: load these constants from constants file
-COLOR_IMAGE_SHAPE = (2320, 3088, 3)
-DEPTH_IMAGE_SHAPE = (480, 640, 1)
-SEGMENTATION_IMAGE_SHAPE = (1160, 1544, 1)
+from .constants import IMAGE_DIMENSIONS
+
+image_dimensions = IMAGE_DIMENSIONS["model"]
 
 
 class Model(object):
@@ -15,34 +14,46 @@ class Model(object):
     def __init__(self):
         super(Model, self).__init__()
 
-        # K.variable
-
         # define inputs
         self.color_image_input = tf.keras.Input(
-            shape=COLOR_IMAGE_SHAPE, name="color_image_input"
+            shape=image_dimensions["color_image"], name="color_image_input"
         )
-        # self.depth_image_input = tf.keras.Input(
-        #     shape=DEPTH_IMAGE_SHAPE, name="depth_image_input"
-        # )
+        self.depth_image_input = tf.keras.Input(
+            shape=image_dimensions["depth_image"], name="depth_image_input"
+        )
 
-        layer = tf.keras.layers.Convolution2D(8, 3, 3)(self.color_image_input)
+        color_layer = tf.keras.layers.Convolution2D(3, 3, 3)(self.color_image_input)
+
+        depth_layer = tf.keras.layers.Convolution2D(3, 3, 3)(self.depth_image_input)
+
+        merge_layer = tf.keras.layers.Add()([color_layer, depth_layer])
 
         # define output
         self.segmentation_image_output = tf.keras.layers.Dense(
-            units=32,
-            input_shape=SEGMENTATION_IMAGE_SHAPE,
+            units=3,
+            input_shape=image_dimensions["segmentation_image"],
             name="segmentation_image_output",
-        )(layer)
+        )(merge_layer)
 
-        inputs = [self.color_image_input]  # TODO: add depth_image_input
+        inputs = [self.color_image_input, self.depth_image_input]
         output = [self.segmentation_image_output]
         self.model = tf.keras.models.Model(inputs=inputs, outputs=output)
 
     def compile(self):
-        self.model.compile(optimizer=None)  # TODO
+        self.model.compile(
+            optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+        )
 
-    def train(self):
-        # self.model.fit
+    def train(self, color_image_array, depth_image_array, segmentation_image_array):
+        inputs = {
+            "color_image_input": color_image_array,
+            "depth_image_input": depth_image_array,
+        }
+        outputs = {"segmentation_image_output": segmentation_image_array}
+        self.model.fit(x=inputs, y=outputs)
+
+    def evaluate(self):
+        # score = model.evaluate(x_test, y_test, batch_size=16)
         pass
 
     def summary(self):

@@ -4,7 +4,7 @@ import secrets
 import tensorflow as tf
 import numpy as np
 
-from .constants import DATA_DIR_PATH, IMAGE_DIMENSIONS
+from .constants import DATA_DIR_PATH, IMAGE_DIMENSIONS, H5_MODEL_PATH, COREML_MODEL_PATH
 from .dataset import gen_training_files, gen_debug_files
 from .model import Model
 from .image_utils import load_image_array, save_image_array
@@ -78,9 +78,15 @@ def run_debug_prediction(model: Model):
 def main():
     model = Model()
     model.compile()
-    print(model.summary())
+    model.print_summary()
     run_training(model)
     run_debug_prediction(model)
+
+    model.save_h5(H5_MODEL_PATH)
+    print(f"Saved h5 model to: {H5_MODEL_PATH}")
+
+    model.save_coreml(COREML_MODEL_PATH)
+    print(f"Saved coreml model to: {COREML_MODEL_PATH}")
 
 
 if __name__ == "__main__":

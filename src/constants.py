@@ -14,3 +14,6 @@ IMAGE_DIMENSIONS = dict(
         segmentation_image=(1544, 1160, 1),
     ),
 )
+
+H5_MODEL_PATH = os.environ.get("H5_MODEL_PATH")
+COREML_MODEL_PATH = os.environ.get("COREML_MODEL_PATH")

@@ -33,16 +33,17 @@ class Model(object):
         )
 
         merge_layer = keras.layers.Add()([color_layer, depth_layer])
-        # merge_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
-        # merge_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
-        # merge_layer = tf.keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
+        
+        layer_stack = keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
+        layer_stack = keras.layers.Activation("relu")(layer_stack)
+
+        # merge_layer = keras.layers.Conv2D(3, 3, 1, dilation_rate=1)(merge_layer)
+        # merge_layer = keras.layers.Conv2D(1, 3, 1, dilation_rate=1)(merge_layer)
+        # merge_layer = keras.layers.Lambda(lambda x: tf.image.rgb_to_grayscale(x))(merge_layer)
 
         # define output
-        self.segmentation_image_output = keras.layers.Dense(
-            units=1,
-            input_shape=image_dimensions["segmentation_image"],
-            name="segmentation_image_output",
-        )(merge_layer)
+        conv_layer = keras.layers.Conv2D(1, 3, 1, dilation_rate=1, name="segmentation_image_output")(layer_stack)
+        self.segmentation_image_output = conv_layer
 
         inputs = [self.color_image_input, self.depth_image_input]
         output = [self.segmentation_image_output]
@@ -76,11 +77,11 @@ class Model(object):
 
     def save_coreml(self, mld_model_path):
         input_names = ["color_image_input", "depth_image_input"]
-        output_names = ["segmentation_image_output"]
+        output_name = "segmentation_image_output"
         coreml_model = coremltools.converters.keras.convert(
             self.model,
             input_names=input_names,
-            output_names=output_names,
+            output_names=output_name,
             image_input_names=input_names,
             add_custom_layers=True,
         )

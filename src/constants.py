@@ -4,12 +4,12 @@ DATA_DIR_PATH = os.environ.get("DATA_DIR_PATH")
 
 IMAGE_DIMENSIONS = dict(
     original=dict(
-        color_image=(1080, 1920, 3),
-        depth_image=(1080, 1920, 3),
-        segmentation_image=(1160, 1544, 3),
+        color_image=(1080, 1920, 1),
+        depth_image=(1080, 1920, 1),
+        segmentation_image=(1160, 1544, 1),
     ),
     model=dict(
-        color_image=(1920, 1080, 3),
+        color_image=(1920, 1080, 1),
         depth_image=(1920, 1080, 1),
         segmentation_image=(1544, 1160, 1),
     ),

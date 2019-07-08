@@ -17,6 +17,7 @@ class Model(object):
         super(Model, self).__init__()
 
         channel_order = "channels_last"
+        color_channels = 1
 
         # define inputs
         self.color_image_input = keras.layers.Input(
@@ -28,20 +29,23 @@ class Model(object):
 
         color_layer = self.color_image_input
         color_layer = keras.layers.Conv2D(
-            3, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
+            color_channels, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
         )(color_layer)
         color_layer = keras.layers.BatchNormalization()(color_layer)
         color_layer = keras.layers.Activation("relu")(color_layer)
-        color_layer = keras.layers.Lambda(lambda x: tf.image.rgb_to_grayscale(x))(
-            color_layer
-        )
+
+        color_layer = keras.layers.Conv2D(
+            color_channels, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
+        )(color_layer)
+        color_layer = keras.layers.BatchNormalization()(color_layer)
+        color_layer = keras.layers.Activation("relu")(color_layer)
 
         depth_layer = self.depth_image_input
         depth_layer = keras.layers.Conv2D(
             1, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
         )(depth_layer)
         depth_layer = keras.layers.BatchNormalization()(depth_layer)
-        depth_layer = keras.layers.Activation("relu")(depth_layer)
+        depth_layer = keras.layers.Activation("sigmoid")(depth_layer)
 
         # combine inputs
         layer_stack = keras.layers.Add()([color_layer, depth_layer])
@@ -52,14 +56,10 @@ class Model(object):
             1, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
         )(layer_stack)
         layer_stack = keras.layers.BatchNormalization()(layer_stack)
-        layer_stack = keras.layers.Activation("sigmoid")(layer_stack)
-
-        # self.segmentation_image_output = keras.layers.Lambda(
-        #     lambda x: x * 255, name="segmentation_image_output"
-        # )(layer_stack)
-
-        self.segmentation_image_output = keras.layers.Dense(1, name="segmentation_image_output")(layer_stack)
-
+        layer_stack = keras.layers.Activation("sigmoid", name="segmentation_image_output")(layer_stack)
+        
+        self.segmentation_image_output = layer_stack
+    
         inputs = [self.color_image_input, self.depth_image_input]
         output = [self.segmentation_image_output]
         self.model = keras.models.Model(inputs=inputs, outputs=output)
@@ -115,8 +115,8 @@ class Model(object):
             input_names=input_names,
             output_names=output_name,
             image_input_names=input_names,
-            add_custom_layers=True,
+            add_custom_layers=False,
             is_bgr=False,
-            image_scale=1 / 255.0,  # expect normalized output in range of [0, 1]
+            # image_scale=1 / 255.0,  # expect normalized output in range of [0, 1]
         )
         coreml_model.save(mld_model_path)

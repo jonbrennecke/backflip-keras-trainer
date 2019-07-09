@@ -35,16 +35,16 @@ class Model(object):
         color_layer = keras.layers.Conv2D(32, activation="relu", **default_conv2d_args)(color_layer)
         color_layer = keras.layers.MaxPool2D(pool_size=(2,2))(color_layer)
         color_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.MaxPool2D(pool_size=(2,2))(color_layer)
+        color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
         color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
         color_layer = keras.layers.MaxPool2D(pool_size=(2,2))(color_layer)
-        # color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
-        # color_layer = keras.layers.Conv2D(256, activation="relu", **default_conv2d_args)(color_layer)
-        # color_layer = keras.layers.MaxPool2D(pool_size=(2,2))(color_layer)
         color_layer = keras.layers.Dropout(0.5)(color_layer)
         # color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
         # color_layer = keras.layers.UpSampling2D(size=(2,2), interpolation="bilinear", data_format=channel_order)(color_layer)
-        # color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
         # color_layer = keras.layers.UpSampling2D(size=(2,2), interpolation="bilinear", data_format=channel_order)(color_layer)
+        # color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
         
         # depth input layer
         self.depth_image_input = keras.layers.Input(
@@ -55,11 +55,11 @@ class Model(object):
         depth_layer = keras.layers.Conv2D(32, activation="relu", **default_conv2d_args)(depth_layer)
         depth_layer = keras.layers.MaxPool2D(pool_size=(2,2))(depth_layer)
         depth_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.MaxPool2D(pool_size=(2,2))(depth_layer)
+        depth_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(depth_layer)
         depth_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(depth_layer)
         depth_layer = keras.layers.MaxPool2D(pool_size=(2,2))(depth_layer)
-        # depth_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(depth_layer)
-        # depth_layer = keras.layers.Conv2D(256, activation="relu", **default_conv2d_args)(depth_layer)
-        # depth_layer = keras.layers.MaxPool2D(pool_size=(2,2))(depth_layer)
         depth_layer = keras.layers.Dropout(0.5)(depth_layer)
         # depth_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(depth_layer)
         # depth_layer = keras.layers.UpSampling2D(size=(2,2), interpolation="bilinear", data_format=channel_order)(depth_layer)
@@ -70,7 +70,7 @@ class Model(object):
         # layer_stack = color_layer
         layer_stack = keras.layers.Add()([color_layer, depth_layer])
         layer_stack = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(layer_stack)
-        # layer_stack = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(layer_stack)
+        layer_stack = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(layer_stack)
 
 
         # final block on the combined inputs; ends with a sigmoid activation layer so that output is

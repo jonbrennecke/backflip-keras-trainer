@@ -35,8 +35,8 @@ def random_boolean_choice() -> bool:
 
 
 def flip_images_randomly(input_images: tuple):
-    if random_boolean_choice():
-        return tuple(map(lambda x: np.fliplr(x), input_images))
+    # if random_boolean_choice():
+    #     return tuple(map(lambda x: np.fliplr(x), input_images))
     return input_images
 
 
@@ -72,7 +72,15 @@ def gen_training_data(model: Model):
             segmentation_image_path,
             target_size=(segmentation_image_height, segmentation_image_width),
             color_mode="grayscale",
-        ) / 255
+        )
+
+        # filename = f"/Users/jon/Downloads/test.jpg"
+        # reshaped = np.reshape(
+        #     color_image_array,
+        #     (color_image_array.shape[1], color_image_array.shape[2], color_image_array.shape[3]),
+        # )
+        # save_image_array(filename, reshaped)
+        # print(f"Saved original image to: {filename}")
 
         yield (color_image_array, depth_image_array, segmentation_image_array)
 
@@ -102,6 +110,10 @@ def run_debug_prediction(model: Model):
             model.predict(color_image_array, depth_image_array) * 255
         )
 
+        print("----")
+        print(np.min(prediction_image_array), np.max(prediction_image_array))
+        print("----")
+
         token = secrets.token_hex(10)
         reshaped_prediction_image_array = np.reshape(
             prediction_image_array,
@@ -121,6 +133,7 @@ def run_debug_prediction(model: Model):
 
 
 def main():
+    tf.reset_default_graph()
     model = Model()
     model.compile()
     model.print_summary()

@@ -18,44 +18,64 @@ class Model(object):
 
         channel_order = "channels_last"
         color_channels = 1
+        default_conv2d_args = dict(
+            kernel_size=(3, 3),
+            dilation_rate=1,
+            padding="same",
+            data_format=channel_order,
+            kernel_initializer='he_normal'
+        )
 
-        # define inputs
+        # color input layer
         self.color_image_input = keras.layers.Input(
             shape=image_dimensions["color_image"], name="color_image_input"
         )
+        color_layer = self.color_image_input
+        color_layer = keras.layers.Conv2D(8, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.Conv2D(16, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.MaxPool2D(pool_size=(2,2))(color_layer)
+        color_layer = keras.layers.Conv2D(32, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.MaxPool2D(pool_size=(2,2))(color_layer)
+        color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.Conv2D(256, activation="relu", **default_conv2d_args)(color_layer)
+        color_layer = keras.layers.MaxPool2D(pool_size=(2,2))(color_layer)
+        color_layer = keras.layers.Dropout(0.5)(color_layer)
+        # color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
+        # color_layer = keras.layers.UpSampling2D(size=(2,2), interpolation="bilinear", data_format=channel_order)(color_layer)
+        # color_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(color_layer)
+        # color_layer = keras.layers.UpSampling2D(size=(2,2), interpolation="bilinear", data_format=channel_order)(color_layer)
+        
+        # depth input layer
         self.depth_image_input = keras.layers.Input(
             shape=image_dimensions["depth_image"], name="depth_image_input"
         )
-
-        color_layer = self.color_image_input
-        color_layer = keras.layers.Conv2D(
-            color_channels, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
-        )(color_layer)
-        color_layer = keras.layers.BatchNormalization()(color_layer)
-        color_layer = keras.layers.Activation("relu")(color_layer)
-
-        color_layer = keras.layers.Conv2D(
-            color_channels, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
-        )(color_layer)
-        color_layer = keras.layers.BatchNormalization()(color_layer)
-        color_layer = keras.layers.Activation("relu")(color_layer)
-
         depth_layer = self.depth_image_input
-        depth_layer = keras.layers.Conv2D(
-            1, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
-        )(depth_layer)
-        depth_layer = keras.layers.BatchNormalization()(depth_layer)
-        depth_layer = keras.layers.Activation("sigmoid")(depth_layer)
+        depth_layer = keras.layers.Conv2D(8, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.Conv2D(16, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.MaxPool2D(pool_size=(2,2))(depth_layer)
+        depth_layer = keras.layers.Conv2D(32, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.MaxPool2D(pool_size=(2,2))(depth_layer)
+        depth_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.Conv2D(256, activation="relu", **default_conv2d_args)(depth_layer)
+        depth_layer = keras.layers.MaxPool2D(pool_size=(2,2))(depth_layer)
+        depth_layer = keras.layers.Dropout(0.5)(depth_layer)
+        # depth_layer = keras.layers.Conv2D(64, activation="relu", **default_conv2d_args)(depth_layer)
+        # depth_layer = keras.layers.UpSampling2D(size=(2,2), interpolation="bilinear", data_format=channel_order)(depth_layer)
+        # depth_layer = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(depth_layer)
+        # depth_layer = keras.layers.UpSampling2D(size=(2,2), interpolation="bilinear", data_format=channel_order)(depth_layer)
 
-        # combine inputs
+        # combine inputs paths
+        # layer_stack = color_layer
         layer_stack = keras.layers.Add()([color_layer, depth_layer])
+        layer_stack = keras.layers.Conv2D(256, activation="relu", **default_conv2d_args)(layer_stack)
+        # layer_stack = keras.layers.Conv2D(128, activation="relu", **default_conv2d_args)(layer_stack)
+
 
         # final block on the combined inputs; ends with a sigmoid activation layer so that output is
         # the probability of being in the foreground or background
-        layer_stack = keras.layers.Conv2D(
-            1, (3, 1), dilation_rate=1, padding="same", data_format=channel_order
-        )(layer_stack)
-        layer_stack = keras.layers.BatchNormalization()(layer_stack)
+        layer_stack = keras.layers.Conv2D(1, **default_conv2d_args)(layer_stack)
         layer_stack = keras.layers.Activation("sigmoid", name="segmentation_image_output")(layer_stack)
         
         self.segmentation_image_output = layer_stack
@@ -66,7 +86,7 @@ class Model(object):
 
     def compile(self):
         self.model.compile(
-            optimizer="sgd", loss="mean_squared_error", metrics=["accuracy"]
+            optimizer=keras.optimizers.Adam(lr = 1e-4), loss="binary_crossentropy", metrics=["accuracy"]
         )
 
     def train(self, color_image_array, depth_image_array, segmentation_image_array):

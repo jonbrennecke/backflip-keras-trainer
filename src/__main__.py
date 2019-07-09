@@ -67,11 +67,12 @@ def gen_training_data(model: Model):
             model.model.output_shape
         )
 
+        # output is normalized (by sigmoid function) so we have to divide by 255
         segmentation_image_array = load_image_array(
             segmentation_image_path,
             target_size=(segmentation_image_height, segmentation_image_width),
             color_mode="grayscale",
-        )
+        ) / 255
 
         yield (color_image_array, depth_image_array, segmentation_image_array)
 

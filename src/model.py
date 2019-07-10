@@ -1,3 +1,6 @@
+import numpy as np
+np.random.seed(1337)
+
 import tensorflow as tf
 import coremltools
 import keras
@@ -31,107 +34,39 @@ class Model(object):
         )
         depth_layer = depth_image_input
 
-        # block 1
-        block1 = keras.layers.Concatenate(axis=3)([color_layer, depth_layer])
-        block1 = keras.layers.Conv2D(
-            64, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block1)
-        block1 = keras.layers.Conv2D(
-            64, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block1)
+        def make_convolution_block(filters, kernel_size=(3, 3)):
+            def fn(input):
+                layers = keras.layers.Conv2D(
+                    filters, kernel_size=kernel_size, **default_conv2d_args
+                )(input)
+                layers = keras.layers.BatchNormalization(epsilon=1e-4)(layers)
+                return keras.layers.Activation("relu")(layers)
+            return fn
 
-        # block 2
-        block2 = keras.layers.MaxPool2D(pool_size=(2, 2))(block1)
-        block2 = keras.layers.Conv2D(
-            128, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block2)
-        # block2 = keras.layers.BatchNormalization()(block2)
-        block2 = keras.layers.Conv2D(
-            128, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block2)
+        def make_downsample_block(filters, kernel_size=(3,3), pool_size=(2, 2), convolutions=3):
+            def fn(input):
+                layers = keras.layers.MaxPool2D(pool_size=pool_size)(input)
+                for _ in range(0, convolutions):
+                    layers = make_convolution_block(filters, kernel_size)(layers)
+                return layers
+            return fn
 
-        # block 3
-        block3 = keras.layers.MaxPool2D(pool_size=(2, 2))(block2)
-        block3 = keras.layers.Conv2D(
-            256, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block3)
-        block3 = keras.layers.Conv2D(
-            256, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block3)
+        def make_upsample_block(filters, kernel_size=(3,3), upsample_size=(2, 2), convolutions=3):
+            def fn(concat_layer, upsample_layer):
+                layers = keras.layers.UpSampling2D(size=upsample_size)(upsample_layer)
+                layers = keras.layers.Concatenate(axis=3)([concat_layer, layers])
+                for _ in range(0, convolutions):
+                    layers = make_convolution_block(filters, kernel_size)(layers)
+                return layers
+            return fn
 
-        # block 4
-        # block4 = keras.layers.MaxPool2D(pool_size=(2, 2))(block3)
-        # block4 = keras.layers.Conv2D(
-        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        # )(block4)
-        # block4 = keras.layers.Conv2D(
-        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        # )(block4)
-        # # block4 = keras.layers.Dropout(0.5)(block4)
-
-        # # block 5
-        # block5 = keras.layers.MaxPool2D(pool_size=(2, 2))(block4)
-        # block5 = keras.layers.Conv2D(
-        #     1024, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        # )(block5)
-        # block5 = keras.layers.Conv2D(
-        #     1024, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        # )(block5)
-
-        # # block 6
-        # block6 = keras.layers.UpSampling2D(size=(2, 2))(block5)
-        # block6 = keras.layers.Conv2D(
-        #     512, kernel_size=(2, 2), activation="relu", **default_conv2d_args
-        # )(block6)
-        # block6 = keras.layers.Concatenate(axis=3)([block4, block6])
-        # block6 = keras.layers.Conv2D(
-        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        # )(block6)
-        # block6 = keras.layers.Conv2D(
-        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        # )(block6)
-
-        # block 7
-        # block7 = keras.layers.UpSampling2D(size=(2, 2))(block6)
-        block7 = keras.layers.Conv2D(
-            256, kernel_size=(2, 2), activation="relu", **default_conv2d_args
-        )(block3)
-        # block7 = keras.layers.Concatenate(axis=3)([block3, block7])
-        block7 = keras.layers.Conv2D(
-            256, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block7)
-        block7 = keras.layers.Conv2D(
-            256, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block7)
-
-        # block 8
-        block8 = keras.layers.UpSampling2D(size=(2, 2))(block7)
-        block8 = keras.layers.Conv2D(
-            128, kernel_size=(2, 2), activation="relu", **default_conv2d_args
-        )(block8)
-        block8 = keras.layers.Concatenate(axis=3)([block2, block8])
-        block8 = keras.layers.Conv2D(
-            128, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block8)
-        block8 = keras.layers.Conv2D(
-            128, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block8)
-
-        # block 9
-        block9 = keras.layers.UpSampling2D(size=(2, 2))(block8)
-        block9 = keras.layers.Conv2D(
-            64, kernel_size=(2, 2), activation="relu", **default_conv2d_args
-        )(block9)
-        block9 = keras.layers.Concatenate(axis=3)([block1, block9])
-        block9 = keras.layers.Conv2D(
-            64, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block9)
-        block9 = keras.layers.Conv2D(
-            64, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block9)
-        block9 = keras.layers.Conv2D(
-            2, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block9)
+        concat = keras.layers.Concatenate(axis=3)([color_layer, depth_layer])
+        block1 = make_convolution_block(64)(concat)
+        block1 = make_convolution_block(64)(block1)
+        block2 = make_downsample_block(128)(block1)
+        block3 = make_downsample_block(256)(block2)
+        block4 = make_upsample_block(128)(block2, block3)
+        block5 = make_upsample_block(64)(block1, block4)
 
         # final block on the combined inputs; ends with a sigmoid activation layer so that output is
         # the probability of being in the foreground or background
@@ -140,7 +75,7 @@ class Model(object):
             kernel_size=(1, 1),
             activation="sigmoid",
             name="segmentation_image_output",
-        )(block9)
+        )(block5)
         segmentation_image_output = output
 
         inputs = [color_image_input, depth_image_input]

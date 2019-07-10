@@ -35,10 +35,10 @@ def random_boolean_choice() -> bool:
 
 
 def flip_images_randomly(input_images: tuple):
-    # if random_boolean_choice():
-    #     return tuple(map(lambda x: np.fliplr(x), input_images))
-    # elif random_boolean_choice():
-    #     return tuple(map(lambda x: np.flipud(x), input_images))
+    if random_boolean_choice():
+        return tuple(map(lambda x: np.fliplr(x), input_images))
+    elif random_boolean_choice():
+        return tuple(map(lambda x: np.flipud(x), input_images))
     return input_images
 
 

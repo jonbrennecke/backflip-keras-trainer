@@ -123,7 +123,11 @@ def run_debug_prediction(model: Model):
 
         reshaped_original_image_array = np.reshape(
             color_image_array,
-            (color_image_array.shape[1], color_image_array.shape[2], color_image_array.shape[3]),
+            (
+                color_image_array.shape[1],
+                color_image_array.shape[2],
+                color_image_array.shape[3],
+            ),
         )
         filename_original = f"/Users/jon/Downloads/{token}-original.jpg"
         save_image_array(filename_original, reshaped_original_image_array)

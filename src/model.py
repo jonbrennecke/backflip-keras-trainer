@@ -5,6 +5,8 @@ import tensorflow as tf
 import coremltools
 import keras
 
+from keras import backend as K
+
 from .constants import IMAGE_DIMENSIONS, NUMBER_OF_STEPS_PER_EPOCH, NUMBER_OF_EPOCHS
 
 image_dimensions = IMAGE_DIMENSIONS["model"]
@@ -83,8 +85,21 @@ class Model(object):
         return keras.models.Model(inputs=inputs, outputs=output)
 
     def compile(self):
+        def dice_coef(y_true, y_pred, smooth = 1):
+            y_true_f = K.flatten(y_true)
+            y_pred_f = K.flatten(y_pred)
+            
+            intersection = K.sum(y_true_f * y_pred_f)
+            return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+
+        def dice_coef_loss(y_true, y_pred):
+            return 1 - dice_coef(y_true, y_pred)
+
+        def loss(y_true, y_pred):
+            return keras.losses.binary_crossentropy(y_true, y_pred) + dice_coef_loss(y_true, y_pred)
+        
         self.model.compile(
-            optimizer="sgd", loss="mean_squared_error", metrics=["accuracy"]
+            loss=loss, optimizer=keras.optimizers.Adam(lr=1e-4), metrics=[dice_coef, "accuracy"]
         )
 
     def train_generator(self, generator):

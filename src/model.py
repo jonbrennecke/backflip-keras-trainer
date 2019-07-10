@@ -2,39 +2,36 @@ import tensorflow as tf
 import coremltools
 import keras
 
-from .constants import IMAGE_DIMENSIONS
+from .constants import IMAGE_DIMENSIONS, NUMBER_OF_STEPS_PER_EPOCH, NUMBER_OF_EPOCHS
 
 image_dimensions = IMAGE_DIMENSIONS["model"]
 
 
 class Model(object):
-    color_image_input: tf.keras.Input = None
-    depth_image_input: tf.keras.Input = None
-    segmentation_image_output: tf.keras.layers.Dense = None
-    model: tf.keras.models.Model = None
+    model: keras.models.Model
 
-    def __init__(self):
+    def __init__(self, model: keras.models.Model):
         super(Model, self).__init__()
+        self.model = model
 
-        channel_order = "channels_last"
-        color_channels = 1
+    def create_model():
         default_conv2d_args = dict(
             padding="same",
-            data_format=channel_order,
+            data_format="channels_last",
             kernel_initializer='he_normal'
         )
 
         # color input layer
-        self.color_image_input = keras.layers.Input(
+        color_image_input = keras.layers.Input(
             shape=image_dimensions["color_image"], name="color_image_input"
         )
-        color_layer = self.color_image_input
+        color_layer = color_image_input
 
         # depth input layer
-        self.depth_image_input = keras.layers.Input(
+        depth_image_input = keras.layers.Input(
             shape=image_dimensions["depth_image"], name="depth_image_input"
         )
-        depth_layer = self.depth_image_input
+        depth_layer = depth_image_input
 
         # block 1
         block1 = keras.layers.Concatenate(axis=3)([color_layer, depth_layer])
@@ -55,7 +52,7 @@ class Model(object):
         block4 = keras.layers.MaxPool2D(pool_size=(2,2))(block3)
         block4 = keras.layers.Conv2D(512, kernel_size=(3, 3), activation="relu", **default_conv2d_args)(block4)
         block4 = keras.layers.Conv2D(512, kernel_size=(3, 3), activation="relu", **default_conv2d_args)(block4)
-        block4 = keras.layers.Dropout(0.5)(block4)
+        # block4 = keras.layers.Dropout(0.5)(block4)
 
         # block 5
         block5 = keras.layers.MaxPool2D(pool_size=(2,2))(block4)
@@ -100,24 +97,16 @@ class Model(object):
             activation="sigmoid",
             name="segmentation_image_output"
         )(block9)
-        self.segmentation_image_output = output
+        segmentation_image_output = output
     
-        inputs = [self.color_image_input, self.depth_image_input]
-        output = [self.segmentation_image_output]
-        self.model = keras.models.Model(inputs=inputs, outputs=output)
+        inputs = [color_image_input, depth_image_input]
+        output = [segmentation_image_output]
+        return keras.models.Model(inputs=inputs, outputs=output)
 
     def compile(self):
         self.model.compile(
-            optimizer=keras.optimizers.Adam(lr = 1e-4), loss="binary_crossentropy", metrics=["accuracy"]
+            optimizer="sgd", loss="mean_squared_error", metrics=["accuracy"]
         )
-
-    def train(self, color_image_array, depth_image_array, segmentation_image_array):
-        inputs = {
-            "color_image_input": color_image_array,
-            "depth_image_input": depth_image_array,
-        }
-        outputs = {"segmentation_image_output": segmentation_image_array}
-        self.model.fit(x=inputs, y=outputs, epochs=1)
 
     def train_generator(self, generator):
         def arrange_items():
@@ -133,7 +122,7 @@ class Model(object):
                 yield (inputs, outputs)
 
         self.model.fit_generator(
-            arrange_items(), steps_per_epoch=20, epochs=5, shuffle=True
+            arrange_items(), steps_per_epoch=NUMBER_OF_STEPS_PER_EPOCH, epochs=NUMBER_OF_EPOCHS, shuffle=True
         )
 
     def predict(self, color_image_array, depth_image_array):
@@ -141,7 +130,7 @@ class Model(object):
             "color_image_input": color_image_array,
             "depth_image_input": depth_image_array,
         }
-        return self.model.predict(inputs, batch_size=16)
+        return self.model.predict(inputs)
 
     def print_summary(self):
         return self.model.summary()

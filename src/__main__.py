@@ -37,6 +37,8 @@ def random_boolean_choice() -> bool:
 def flip_images_randomly(input_images: tuple):
     # if random_boolean_choice():
     #     return tuple(map(lambda x: np.fliplr(x), input_images))
+    # elif random_boolean_choice():
+    #     return tuple(map(lambda x: np.flipud(x), input_images))
     return input_images
 
 
@@ -110,10 +112,6 @@ def run_debug_prediction(model: Model):
             model.predict(color_image_array, depth_image_array) * 255
         )
 
-        print("----")
-        print(np.min(prediction_image_array), np.max(prediction_image_array))
-        print("----")
-
         token = secrets.token_hex(10)
         reshaped_prediction_image_array = np.reshape(
             prediction_image_array,
@@ -133,8 +131,11 @@ def run_debug_prediction(model: Model):
 
 
 def main():
-    tf.reset_default_graph()
-    model = Model()
+    # keras_model = tf.keras.models.load_model(H5_MODEL_PATH)
+    # model = Model(keras_model)
+    # run_debug_prediction(model)
+
+    model = Model(Model.create_model())
     model.compile()
     model.print_summary()
     run_training(model)

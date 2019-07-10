@@ -45,6 +45,7 @@ class Model(object):
         block2 = keras.layers.Conv2D(
             128, kernel_size=(3, 3), activation="relu", **default_conv2d_args
         )(block2)
+        # block2 = keras.layers.BatchNormalization()(block2)
         block2 = keras.layers.Conv2D(
             128, kernel_size=(3, 3), activation="relu", **default_conv2d_args
         )(block2)
@@ -59,44 +60,43 @@ class Model(object):
         )(block3)
 
         # block 4
-        block4 = keras.layers.MaxPool2D(pool_size=(2, 2))(block3)
-        block4 = keras.layers.Conv2D(
-            512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block4)
-        block4 = keras.layers.Conv2D(
-            512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block4)
-        # block4 = keras.layers.Dropout(0.5)(block4)
+        # block4 = keras.layers.MaxPool2D(pool_size=(2, 2))(block3)
+        # block4 = keras.layers.Conv2D(
+        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
+        # )(block4)
+        # block4 = keras.layers.Conv2D(
+        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
+        # )(block4)
+        # # block4 = keras.layers.Dropout(0.5)(block4)
 
-        # block 5
-        block5 = keras.layers.MaxPool2D(pool_size=(2, 2))(block4)
-        block5 = keras.layers.Conv2D(
-            1024, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block5)
-        block5 = keras.layers.Conv2D(
-            1024, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block5)
-        # block5 = keras.layers.Dropout(0.5)(block5) for some reason, this extra dropout breaks everything
+        # # block 5
+        # block5 = keras.layers.MaxPool2D(pool_size=(2, 2))(block4)
+        # block5 = keras.layers.Conv2D(
+        #     1024, kernel_size=(3, 3), activation="relu", **default_conv2d_args
+        # )(block5)
+        # block5 = keras.layers.Conv2D(
+        #     1024, kernel_size=(3, 3), activation="relu", **default_conv2d_args
+        # )(block5)
 
-        # block 6
-        block6 = keras.layers.UpSampling2D(size=(2, 2))(block5)
-        block6 = keras.layers.Conv2D(
-            512, kernel_size=(2, 2), activation="relu", **default_conv2d_args
-        )(block6)
-        block6 = keras.layers.Concatenate(axis=3)([block4, block6])
-        block6 = keras.layers.Conv2D(
-            512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block6)
-        block6 = keras.layers.Conv2D(
-            512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
-        )(block6)
+        # # block 6
+        # block6 = keras.layers.UpSampling2D(size=(2, 2))(block5)
+        # block6 = keras.layers.Conv2D(
+        #     512, kernel_size=(2, 2), activation="relu", **default_conv2d_args
+        # )(block6)
+        # block6 = keras.layers.Concatenate(axis=3)([block4, block6])
+        # block6 = keras.layers.Conv2D(
+        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
+        # )(block6)
+        # block6 = keras.layers.Conv2D(
+        #     512, kernel_size=(3, 3), activation="relu", **default_conv2d_args
+        # )(block6)
 
         # block 7
-        block7 = keras.layers.UpSampling2D(size=(2, 2))(block6)
+        # block7 = keras.layers.UpSampling2D(size=(2, 2))(block6)
         block7 = keras.layers.Conv2D(
             256, kernel_size=(2, 2), activation="relu", **default_conv2d_args
-        )(block7)
-        block7 = keras.layers.Concatenate(axis=3)([block3, block7])
+        )(block3)
+        # block7 = keras.layers.Concatenate(axis=3)([block3, block7])
         block7 = keras.layers.Conv2D(
             256, kernel_size=(3, 3), activation="relu", **default_conv2d_args
         )(block7)
@@ -149,7 +149,7 @@ class Model(object):
 
     def compile(self):
         self.model.compile(
-            optimizer=keras.optimizers.Adam(lr = 1e-4), loss="binary_crossentropy", metrics=["accuracy"]
+            optimizer="sgd", loss="mean_squared_error", metrics=["accuracy"]
         )
 
     def train_generator(self, generator):
@@ -159,10 +159,10 @@ class Model(object):
                     gen_data
                 )
                 inputs = {
-                    "color_image_input": color_image_array / 255,
-                    "depth_image_input": depth_image_array / 255,
+                    "color_image_input": color_image_array,
+                    "depth_image_input": depth_image_array,
                 }
-                outputs = {"segmentation_image_output": segmentation_image_array / 255}
+                outputs = {"segmentation_image_output": segmentation_image_array}
                 yield (inputs, outputs)
 
         self.model.fit_generator(

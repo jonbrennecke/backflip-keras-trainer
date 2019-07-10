@@ -54,14 +54,14 @@ def gen_training_data(model: Model):
         color_image_width, color_image_height = image_dimensions["color_image"][0:2]
         color_image_array = load_image_array(
             color_image_path,
-            target_size=(color_image_height, color_image_width),
+            size=(color_image_height, color_image_width),
             color_mode="grayscale",
         )
 
         depth_image_width, depth_image_height = image_dimensions["depth_image"][0:2]
         depth_image_array = load_image_array(
             depth_image_path,
-            target_size=(depth_image_height, depth_image_width),
+            size=(depth_image_height, depth_image_width),
             color_mode="grayscale",
         )
 
@@ -72,7 +72,7 @@ def gen_training_data(model: Model):
         # output is normalized (by sigmoid function) so we have to divide by 255
         segmentation_image_array = load_image_array(
             segmentation_image_path,
-            target_size=(segmentation_image_height, segmentation_image_width),
+            size=(segmentation_image_height, segmentation_image_width),
             color_mode="grayscale",
         )
 
@@ -97,19 +97,19 @@ def run_debug_prediction(model: Model):
         color_image_width, color_image_height = image_dimensions["color_image"][0:2]
         color_image_array = load_image_array(
             color_image_path,
-            target_size=(color_image_height, color_image_width),
+            size=(color_image_height, color_image_width),
             color_mode="grayscale",
         )
 
         depth_image_width, depth_image_height = image_dimensions["depth_image"][0:2]
         depth_image_array = load_image_array(
             depth_image_path,
-            target_size=(depth_image_height, depth_image_width),
+            size=(depth_image_height, depth_image_width),
             color_mode="grayscale",
         )
 
         prediction_image_array = (
-            model.predict(color_image_array, depth_image_array) * 255
+            model.predict(color_image_array, depth_image_array)
         )
 
         token = secrets.token_hex(10)

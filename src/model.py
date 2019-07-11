@@ -66,9 +66,10 @@ class Model(object):
         block1 = make_convolution_block(64)(concat)
         block1 = make_convolution_block(64)(block1)
         block2 = make_downsample_block(128)(block1)
-        block3 = make_downsample_block(256)(block2)
-        block4 = make_upsample_block(128)(block2, block3)
-        block5 = make_upsample_block(64)(block1, block4)
+        # block3 = make_downsample_block(256)(block2)
+        # block4 = make_upsample_block(128)(block2, block3)
+        # block5 = make_upsample_block(64)(block1, block4)
+        block5 = make_upsample_block(64)(block1, block2)
 
         # final block on the combined inputs; ends with a sigmoid activation layer so that output is
         # the probability of being in the foreground or background
@@ -99,7 +100,7 @@ class Model(object):
             return keras.losses.binary_crossentropy(y_true, y_pred) + dice_coef_loss(y_true, y_pred)
         
         self.model.compile(
-            loss=loss, optimizer=keras.optimizers.Adam(lr=1e-4), metrics=[dice_coef, "accuracy"]
+            loss=loss, optimizer=keras.optimizers.Adam(lr=1e-4), metrics=[dice_coef]
         )
 
     def train_generator(self, generator):
@@ -145,5 +146,6 @@ class Model(object):
             image_input_names=input_names,
             add_custom_layers=False,
             is_bgr=False,
+            image_scale=1./255
         )
         coreml_model.save(mld_model_path)

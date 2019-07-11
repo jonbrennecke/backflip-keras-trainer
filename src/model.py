@@ -66,9 +66,6 @@ class Model(object):
         block1 = make_convolution_block(64)(concat)
         block1 = make_convolution_block(64)(block1)
         block2 = make_downsample_block(128)(block1)
-        # block3 = make_downsample_block(256)(block2)
-        # block4 = make_upsample_block(128)(block2, block3)
-        # block5 = make_upsample_block(64)(block1, block4)
         block5 = make_upsample_block(64)(block1, block2)
 
         # final block on the combined inputs; ends with a sigmoid activation layer so that output is

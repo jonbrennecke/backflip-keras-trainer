@@ -1,1 +1,1 @@
-pipenv run python -m src
+pipenv run python -m src $@

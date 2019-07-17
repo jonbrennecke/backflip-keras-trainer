@@ -2,6 +2,7 @@ import os
 import math
 import random
 import secrets
+import argparse
 import tensorflow as tf
 import numpy as np
 
@@ -16,7 +17,9 @@ image_dimensions = IMAGE_DIMENSIONS["original"]
 
 def run_training(model: Model):
     training_data_gen = gen_training_data(model)
-    model.train_generator(make_infinite_random_generator(training_data_gen))
+    model.train_generator(
+        make_infinite_random_generator(training_data_gen), H5_MODEL_PATH
+    )
 
 
 def make_infinite_random_generator(input_generator):
@@ -108,9 +111,7 @@ def run_debug_prediction(model: Model):
             color_mode="grayscale",
         )
 
-        prediction_image_array = (
-            model.predict(color_image_array, depth_image_array)
-        )
+        prediction_image_array = model.predict(color_image_array, depth_image_array)
 
         token = secrets.token_hex(10)
         reshaped_prediction_image_array = np.reshape(
@@ -134,20 +135,47 @@ def run_debug_prediction(model: Model):
         print(f"Saved original image to: {filename_original}")
 
 
-def main():
-    # keras_model = tf.keras.models.load_model(H5_MODEL_PATH)
-    # model = Model(keras_model)
-    # run_debug_prediction(model)
-
-    model = Model(Model.create_model())
+def make_model(reset_weights: bool = True) -> Model:
+    keras_model = Model.create_model()
+    if not reset_weights:
+        keras_model.load_weights(H5_MODEL_PATH)
+    model = Model(keras_model)
     model.compile()
+    return model
+
+
+def main():
+    parser = make_arg_parsers()
+    args = parser.parse_args()
+    args.func(args)
+
+
+def make_arg_parsers():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+    coreml_subparser = subparsers.add_parser("coreml", help="coreml options")
+    coreml_subparser.set_defaults(func=save_coreml_model)
+    prediction_subparser = subparsers.add_parser("predict", help="prediction options")
+    prediction_subparser.set_defaults(func=run_prediction)
+    training_subparser = subparsers.add_parser("train", help="training options")
+    training_subparser.set_defaults(func=run_training)
+    return parser
+
+
+def run_prediction(args=None):
+    model = make_model(reset_weights=False)
+    run_debug_prediction(model)
+
+
+def run_training(args=None):
+    model = make_model(reset_weights=True)
     model.print_summary()
     run_training(model)
     run_debug_prediction(model)
 
-    model.save_h5(H5_MODEL_PATH)
-    print(f"Saved h5 model to: {H5_MODEL_PATH}")
 
+def save_coreml_model(args=None):
+    model = make_model(reset_weights=False)
     model.save_coreml(COREML_MODEL_PATH)
     print(f"Saved coreml model to: {COREML_MODEL_PATH}")
 

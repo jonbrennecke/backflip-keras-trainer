@@ -15,7 +15,7 @@ from .image_utils import load_image_array, save_image_array
 image_dimensions = IMAGE_DIMENSIONS["original"]
 
 
-def run_training(model: Model):
+def train_model(model: Model):
     training_data_gen = gen_training_data(model)
     model.train_generator(
         make_infinite_random_generator(training_data_gen), H5_MODEL_PATH
@@ -79,18 +79,10 @@ def gen_training_data(model: Model):
             color_mode="grayscale",
         )
 
-        # filename = f"/Users/jon/Downloads/test.jpg"
-        # reshaped = np.reshape(
-        #     color_image_array,
-        #     (color_image_array.shape[1], color_image_array.shape[2], color_image_array.shape[3]),
-        # )
-        # save_image_array(filename, reshaped)
-        # print(f"Saved original image to: {filename}")
-
         yield (color_image_array, depth_image_array, segmentation_image_array)
 
 
-def run_debug_prediction(model: Model):
+def predict(model: Model):
     for dataset_files in gen_debug_files(DATA_DIR_PATH):
         dataset_path = os.path.join(DATA_DIR_PATH, dataset_files["path"])
         images = dataset_files["images"]
@@ -164,14 +156,14 @@ def make_arg_parsers():
 
 def run_prediction(args=None):
     model = make_model(reset_weights=False)
-    run_debug_prediction(model)
+    predict(model)
 
 
 def run_training(args=None):
     model = make_model(reset_weights=True)
     model.print_summary()
-    run_training(model)
-    run_debug_prediction(model)
+    train_model(model)
+    predict(model)
 
 
 def save_coreml_model(args=None):

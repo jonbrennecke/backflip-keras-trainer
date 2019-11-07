@@ -74,17 +74,24 @@ class Model(object):
 
             return fn
 
-        concat = keras.layers.Concatenate(axis=3)([color_layer, depth_layer])
-        block_conv_1 = make_convolution_block(64)(concat)
-        block_conv_1 = make_convolution_block(64)(block_conv_1)
-        block_down_1 = make_downsample_block(128)(block_conv_1)
-        block_down_2 = make_downsample_block(256)(block_down_1)
 
-        # center = make_convolution_block(256)(block_down_2)
-        # center = make_convolution_block(256)(center)
+        def make_convnet(input):
+            block_conv_1 = make_convolution_block(64)(input)
+            block_conv_1 = make_convolution_block(64)(block_conv_1)
+            block_down_1 = make_downsample_block(128)(block_conv_1)
+            block_down_2 = make_downsample_block(256)(block_down_1)
+            block_up_2 = make_upsample_block(128)(block_down_1, block_down_2)
+            block_up_3 = make_upsample_block(64)(block_conv_1, block_up_2)
+            return block_up_3
 
-        block_up_2 = make_upsample_block(128)(block_down_1, block_down_2)
-        block_up_3 = make_upsample_block(64)(block_conv_1, block_up_2)
+
+        # color_convnet = make_convnet(color_layer)
+        # depth_convnet = make_convnet(depth_layer)
+        # concat = keras.layers.Concatenate(axis=3)([color_convnet, depth_convnet])
+        # convnet = make_convnet(concat)
+
+        concat = keras.layers.Concatenate(axis=3)([depth_layer, color_layer])
+        convnet = make_convnet(concat)
 
         # final block on the combined inputs; ends with a sigmoid activation layer so that output is
         # the probability of being in the foreground or background
@@ -94,7 +101,7 @@ class Model(object):
             padding="valid",
             activation="sigmoid",
             name="segmentation_image_output",
-        )(block_up_3)
+        )(convnet)
         # BatchNormalization
         segmentation_image_output = output
 
